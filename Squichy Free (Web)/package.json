@@ -1,5 +1,5 @@
 {
-  "name": "free bug",
+  "name": "varnox-x-crasher-web",
   "version": "1.0.0",
   "main": "api/index.js",
   "dependencies": {
