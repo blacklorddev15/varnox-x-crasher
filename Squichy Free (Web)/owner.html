@@ -145,6 +145,15 @@ input::placeholder{
 .premium-toggle{border:1px solid var(--accent2);background:rgba(228,103,24,.16);color:var(--accent2);border-radius:999px;padding:10px 14px;font-weight:700;font-size:.74rem;cursor:pointer;white-space:nowrap;}
 .premium-toggle.enabled{background:var(--accent);color:#fff;border-color:var(--accent);}
 .premium-toggle:disabled{opacity:.55;cursor:not-allowed;}
+.key-generator{border-top:1px solid var(--border2);margin-top:16px;padding-top:16px;}
+.key-generator-row{display:flex;gap:8px;align-items:center;}
+.key-days{width:88px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:10px;font:inherit;}
+.key-action{flex:1;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:10px 12px;font-weight:700;cursor:pointer;}
+.key-action:disabled{opacity:.55;cursor:not-allowed;}
+.generated-key{display:none;margin-top:12px;padding:12px;border:1px dashed var(--accent2);border-radius:10px;background:rgba(228,103,24,.08);}
+.generated-key.show{display:block;}
+.generated-key code{display:block;overflow-wrap:anywhere;color:var(--accent2);font-size:.74rem;line-height:1.5;}
+.generated-key small{display:block;color:var(--muted);margin-top:7px;}
 .section-title{
   font-size:.68rem;
   color:var(--muted);
@@ -275,6 +284,22 @@ input::placeholder{
         </div>
         <button class="premium-toggle" id="premium-toggle" data-enabled="false" onclick="togglePremiumMode()">Enable</button>
       </div>
+      <div class="key-generator">
+        <div class="section-title">Premium key generator</div>
+        <div class="key-generator-row">
+          <select class="key-days" id="premium-key-days" aria-label="Key duration">
+            <option value="1">1 day</option>
+            <option value="7" selected>7 days</option>
+            <option value="30">30 days</option>
+          </select>
+          <button class="key-action" id="generate-key-btn" onclick="generatePremiumKey()">Generate key</button>
+        </div>
+        <div class="generated-key" id="generated-key-box">
+          <code id="generated-key-value"></code>
+          <small id="generated-key-expiry"></small>
+          <button class="key-action" style="margin-top:10px;" onclick="copyGeneratedKey()">Copy key</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -380,6 +405,26 @@ async function loadPremiumMode(){
   const r=await api('/api/owner/premium','GET',null,true);
   if(!r||r.error){ownerSessionExpired();return;}
   renderPremiumMode(Boolean(r.premiumOnly));
+}
+
+async function generatePremiumKey(){
+  const button=document.getElementById('generate-key-btn');
+  const days=Number(document.getElementById('premium-key-days').value||7);
+  if(!button)return;
+  button.disabled=true;
+  const r=await api('/api/owner/premium-key','POST',{days},true);
+  button.disabled=false;
+  if(!r||!r.success){toast('Could not generate premium key');return;}
+  document.getElementById('generated-key-value').textContent=r.key;
+  document.getElementById('generated-key-expiry').textContent=`Expires: ${new Date(r.expiresAt).toLocaleString()}`;
+  document.getElementById('generated-key-box').classList.add('show');
+}
+
+async function copyGeneratedKey(){
+  const value=document.getElementById('generated-key-value')?.textContent;
+  if(!value)return;
+  try{await navigator.clipboard.writeText(value);toast('Premium key copied');}
+  catch(e){toast('Copy failed; select the key manually');}
 }
 
 async function togglePremiumMode(){

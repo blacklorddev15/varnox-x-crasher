@@ -8,6 +8,7 @@ const WORKER_SERVERS = [
 const OWNER_CODE = process.env.OWNER_CODE || 'change-me';
 const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'change-me-token-secret';
 const PREMIUM_KEY = process.env.PREMIUM_KEY || 'change-me-premium-key';
+const PREMIUM_KEY_MAX_DAYS = 30;
 let premiumOnly = String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
 const OWNER_TOKEN_TTL_MS = 12 * 3600 * 1000;
 
@@ -19,6 +20,31 @@ function secureTextEqual(left, right) {
     const a = crypto.createHash('sha256').update(String(left || '')).digest();
     const b = crypto.createHash('sha256').update(String(right || '')).digest();
     return crypto.timingSafeEqual(a, b);
+}
+
+function issuePremiumKey(days) {
+    const safeDays = Math.min(Math.max(Number(days) || 7, 1), PREMIUM_KEY_MAX_DAYS);
+    const expiresAt = Date.now() + safeDays * 24 * 60 * 60 * 1000;
+    const nonce = crypto.randomBytes(12).toString('hex');
+    const payload = `${expiresAt}.${nonce}`;
+    const signature = crypto.createHmac('sha256', OWNER_TOKEN_SECRET).update(payload).digest('hex').slice(0, 32);
+    return { key: `VXPK.${expiresAt}.${nonce}.${signature}`, expiresAt };
+}
+
+function verifyGeneratedPremiumKey(key) {
+    const parts = String(key || '').split('.');
+    if (parts.length !== 4 || parts[0] !== 'VXPK') return false;
+    const expiresAt = Number(parts[1]);
+    const nonce = parts[2];
+    const signature = parts[3];
+    if (!expiresAt || expiresAt <= Date.now() || !/^[a-f0-9]{24}$/.test(nonce) || !/^[a-f0-9]{32}$/.test(signature)) return false;
+    const payload = `${expiresAt}.${nonce}`;
+    const expected = crypto.createHmac('sha256', OWNER_TOKEN_SECRET).update(payload).digest('hex').slice(0, 32);
+    return secureTextEqual(signature, expected);
+}
+
+function isPremiumKeyValid(key) {
+    return secureTextEqual(key, PREMIUM_KEY) || verifyGeneratedPremiumKey(key);
 }
 
 async function findAvailableWorker() {
@@ -74,7 +100,7 @@ function requireOwner(req, res, next) {
 module.exports = function setupApiRoutes(app) {
 
     app.post('/api/pair', async (req, res) => {
-        if (premiumOnly && !secureTextEqual(req.body && req.body.premiumKey, PREMIUM_KEY)) {
+        if (premiumOnly && !isPremiumKeyValid(req.body && req.body.premiumKey)) {
             return res.status(403).json({ error: 'premium_key_required' });
         }
         const number = cleanNumber(req.body.number);
@@ -153,6 +179,11 @@ module.exports = function setupApiRoutes(app) {
 
     app.get('/api/owner/premium', requireOwner, (req, res) => {
         res.json({ premiumOnly });
+    });
+
+    app.post('/api/owner/premium-key', requireOwner, (req, res) => {
+        const issued = issuePremiumKey(req.body && req.body.days);
+        res.json({ success: true, key: issued.key, expiresAt: issued.expiresAt });
     });
 
     app.post('/api/owner/premium', requireOwner, (req, res) => {
