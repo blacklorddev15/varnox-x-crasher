@@ -1,4 +1,5 @@
 {
+  "buildCommand": null,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/owner", "destination": "/owner.html" },
