@@ -7,11 +7,18 @@ const WORKER_SERVERS = [
 
 const OWNER_CODE = process.env.OWNER_CODE || 'change-me';
 const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'change-me-token-secret';
+const PREMIUM_KEY = process.env.PREMIUM_KEY || 'change-me-premium-key';
 let premiumOnly = String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
 const OWNER_TOKEN_TTL_MS = 12 * 3600 * 1000;
 
 function cleanNumber(raw) {
     return String(raw || '').replace(/[^0-9]/g, '');
+}
+
+function secureTextEqual(left, right) {
+    const a = crypto.createHash('sha256').update(String(left || '')).digest();
+    const b = crypto.createHash('sha256').update(String(right || '')).digest();
+    return crypto.timingSafeEqual(a, b);
 }
 
 async function findAvailableWorker() {
@@ -67,7 +74,9 @@ function requireOwner(req, res, next) {
 module.exports = function setupApiRoutes(app) {
 
     app.post('/api/pair', async (req, res) => {
-        if (premiumOnly) return res.status(403).json({ error: 'premium_mode_enabled' });
+        if (premiumOnly && !secureTextEqual(req.body && req.body.premiumKey, PREMIUM_KEY)) {
+            return res.status(403).json({ error: 'premium_key_required' });
+        }
         const number = cleanNumber(req.body.number);
         if (number.length < 7) return res.status(400).json({ error: 'invalid_number' });
 

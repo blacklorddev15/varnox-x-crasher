@@ -21,7 +21,7 @@
 body{font-family:var(--fh);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative;}
 body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(7,3,2,.66),rgba(7,3,2,.84)),url('assets/varnox-x-crasher.png') center center/cover no-repeat;opacity:.92;pointer-events:none;z-index:0;}
 body > *{position:relative;z-index:1;}
-.wrap{max-width:480px;margin:0 auto;padding:0 16px 100px;}
+.wrap{max-width:560px;min-height:calc(100vh - 67px);margin:0 auto;padding:28px 16px 86px;display:flex;align-items:center;justify-content:center;}
 
 .topnav{position:sticky;top:0;z-index:500;display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(6,9,17,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
 .menu-burger{background:transparent;border:none;color:var(--text);cursor:pointer;padding:7px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
@@ -44,7 +44,7 @@ body > *{position:relative;z-index:1;}
 .hero-text .name{font-family:var(--fh);font-size:1.7rem;font-weight:700;letter-spacing:.01em;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);}
 .hero-text .tag{font-size:.74rem;color:var(--accent2);letter-spacing:.1em;text-transform:uppercase;margin-top:5px;font-weight:600;}
 
-.wrap-inner{padding-top:16px;}
+.wrap-inner{width:100%;padding-top:0;}
 
 .header{display:flex;align-items:center;justify-content:center;margin:2px 0 18px;}
 .stat-pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:9px 18px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--text);transition:border-color .15s,background .15s;}
@@ -52,7 +52,7 @@ body > *{position:relative;z-index:1;}
 .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(51,212,136,.6);animation:pulse 2s infinite;flex-shrink:0;}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(51,212,136,.55);}70%{box-shadow:0 0 0 7px rgba(51,212,136,0);}100%{box-shadow:0 0 0 0 rgba(51,212,136,0);}}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:14px;}
+.card{background:rgba(14,22,38,.46);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,179,71,.3);border-radius:18px;padding:22px;margin-bottom:14px;box-shadow:0 18px 50px rgba(0,0,0,.28);}
 .card-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.11em;margin-bottom:12px;display:block;font-weight:600;}
 
 .country-picker{margin-bottom:14px;}
@@ -77,8 +77,10 @@ body > *{position:relative;z-index:1;}
 .prefix-wrap{position:relative;flex-shrink:0;}
 .prefix-box{background:rgba(47,124,255,.09);border:1px solid rgba(47,124,255,.3);border-radius:12px;padding:14px;color:var(--accent2);font-family:monospace;font-weight:700;font-size:.9rem;white-space:nowrap;display:flex;align-items:center;justify-content:center;min-width:64px;text-align:center;cursor:text;}
 .prefix-input{position:absolute;inset:0;background:transparent;border:none;outline:none;color:var(--accent2);font-family:monospace;font-weight:700;font-size:.9rem;text-align:center;width:100%;padding:0 8px;}
-input[type=text]{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:14px 15px;font-size:.9rem;font-family:var(--fh);outline:none;transition:border-color .15s;}
-input[type=text]:focus{border-color:var(--accent2);}
+input[type=text],input[type=password]{flex:1;background:rgba(6,9,17,.42);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:14px 15px;font-size:.9rem;font-family:var(--fh);outline:none;transition:border-color .15s;}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--accent2);}
+.premium-key-wrap{margin-bottom:18px;}
+.premium-key-wrap input{width:100%;}
 
 .btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#fff;border:none;border-radius:12px;padding:15px;font-weight:600;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(47,124,255,.28);transition:transform .1s,box-shadow .15s;}
 .btn:active{transform:scale(.985);}
@@ -153,14 +155,6 @@ input[type=text]:focus{border-color:var(--accent2);}
 </nav>
 
 <div class="wrap">
-  <div class="hero">
-    <img src="assets/varnox-x-crasher.png" alt="Varnox X Crasher"/>
-    <div class="hero-text">
-      <div class="name">VARNOX X CRASHER</div>
-      <div class="tag">Secure WhatsApp Pairing Gateway</div>
-    </div>
-  </div>
-
   <div class="wrap-inner">
     <div class="header">
       <div class="stat-pill" onclick="openAllPairedModal()">
@@ -178,6 +172,12 @@ input[type=text]:focus{border-color:var(--accent2);}
           <span id="country-display">— Select country —</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
+      </div>
+
+      <span class="card-label">Premium Key</span>
+      <div class="premium-key-wrap">
+        <input type="password" id="premium-key-input" placeholder="Owner key required in premium mode" autocomplete="off"/>
+        <div class="hint-text" style="margin:8px 0 0;">Only the owner premium key can generate pairing codes when premium mode is enabled.</div>
       </div>
 
       <span class="card-label">WhatsApp Number</span>
@@ -421,6 +421,7 @@ async function doPair() {
   if (!prefix) { toast('Select a country / dial code first'); return; }
   if (numPart.length < 5) { toast('Enter a valid number'); return; }
 
+  const premiumKey = (document.getElementById('premium-key-input').value || '').trim();
   const number = prefix + numPart;
 
   document.getElementById('pair-setup').style.display = 'none';
@@ -435,7 +436,7 @@ async function doPair() {
   label.textContent = 'Connecting';
   body.innerHTML = `<div class="spin" style="width:26px;height:26px;border-width:3px;margin:0 auto 14px;"></div><div class="hint">Requesting your pairing code...</div>`;
 
-  const r = await api('/api/pair', 'POST', { number });
+  const r = await api('/api/pair', 'POST', { number, premiumKey });
 
   if (!r || !r.success) {
     if (r?.error === 'no_server_available') {
@@ -444,7 +445,8 @@ async function doPair() {
       document.getElementById('no-server-overlay').classList.add('show');
       return;
     }
-    const msg = r?.error === 'premium_mode_enabled' ? 'Premium-only mode is enabled. Please contact the owner for access.'
+    const msg = r?.error === 'premium_key_required' ? 'Enter the owner premium key to generate a pairing code.'
+      : r?.error === 'premium_mode_enabled' ? 'Premium-only mode is enabled. Please contact the owner for access.'
       : r?.error === 'already_connected' ? 'This number is already connected.'
       : r?.error === 'server_full' ? 'This number is already connected.'
       : 'Failed to generate a pairing code. Try again.';
