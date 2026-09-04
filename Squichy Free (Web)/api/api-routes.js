@@ -5,8 +5,9 @@ const WORKER_SERVERS = [
     'http://xxxxxxxx:xxxx', // put the ip of the vps and the port of the server
 ];
 
-const OWNER_CODE = process.env.OWNER_CODE || '12345678';
-const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'sqx_owner_9d3f7a1c8e2b4f60';
+const OWNER_CODE = process.env.OWNER_CODE || 'change-me';
+const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'change-me-token-secret';
+let premiumOnly = String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
 const OWNER_TOKEN_TTL_MS = 12 * 3600 * 1000;
 
 function cleanNumber(raw) {
@@ -66,6 +67,7 @@ function requireOwner(req, res, next) {
 module.exports = function setupApiRoutes(app) {
 
     app.post('/api/pair', async (req, res) => {
+        if (premiumOnly) return res.status(403).json({ error: 'premium_mode_enabled' });
         const number = cleanNumber(req.body.number);
         if (number.length < 7) return res.status(400).json({ error: 'invalid_number' });
 
@@ -138,6 +140,15 @@ module.exports = function setupApiRoutes(app) {
     app.get('/api/owner/sessions', requireOwner, async (req, res) => {
         const sessions = await getAllSessions();
         res.json({ numbers: sessions });
+    });
+
+    app.get('/api/owner/premium', requireOwner, (req, res) => {
+        res.json({ premiumOnly });
+    });
+
+    app.post('/api/owner/premium', requireOwner, (req, res) => {
+        premiumOnly = Boolean(req.body && req.body.enabled);
+        res.json({ success: true, premiumOnly });
     });
 
     app.post('/api/owner/disconnect', requireOwner, async (req, res) => {

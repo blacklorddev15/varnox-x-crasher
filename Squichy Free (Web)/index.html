@@ -11,27 +11,34 @@
 <style>
 :root{
   --bg:#060911; --bg2:#0a0f1c; --card:#0e1626; --card2:#111b30;
-  --line:rgba(140,180,255,.14); --line2:rgba(140,180,255,.28);
+  --line:rgba(255,179,71,.18); --line2:rgba(255,179,71,.32);
   --text:#eef3fb; --muted:#7d93b8;
   --accent:#e46718; --accent2:#ffb347; --accent-deep:#7f1d1d;
   --green:#f59e0b; --amber:#ffb000;
   --fd:'Space Grotesk',sans-serif; --fh:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--fh);background:linear-gradient(rgba(7,3,2,.72),rgba(7,3,2,.86)),url('assets/varnox-x-crasher.png') center top/cover fixed,var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body{font-family:var(--fh);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(7,3,2,.66),rgba(7,3,2,.84)),url('assets/varnox-x-crasher.png') center center/cover no-repeat;opacity:.92;pointer-events:none;z-index:0;}
+body > *{position:relative;z-index:1;}
 .wrap{max-width:480px;margin:0 auto;padding:0 16px 100px;}
 
 .topnav{position:sticky;top:0;z-index:500;display:flex;align-items:center;gap:10px;padding:14px 16px;background:rgba(6,9,17,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
 .menu-burger{background:transparent;border:none;color:var(--text);cursor:pointer;padding:7px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .menu-burger:hover{background:rgba(255,255,255,.07);}
-.topnav-title{font-family:var(--fh);font-weight:700;font-size:.95rem;letter-spacing:.02em;color:var(--text);}
+.topnav-title{font-family:var(--fh);font-weight:700;font-size:.95rem;letter-spacing:.02em;color:var(--text);flex:1;}
+.topnav-admin{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--accent2);border:1px solid rgba(255,179,71,.3);border-radius:999px;padding:7px 10px;background:rgba(228,103,24,.12);}
+.topnav-admin:hover{background:rgba(228,103,24,.24);}
 .sq-menu-dropdown{position:absolute;top:52px;left:12px;background:var(--card2);border:1px solid var(--line2);border-radius:14px;padding:6px;min-width:210px;box-shadow:0 16px 40px rgba(0,0,0,.55);display:none;flex-direction:column;z-index:600;}
 .sq-menu-dropdown.show{display:flex;}
 .sq-menu-dropdown button{display:flex;align-items:center;gap:10px;background:transparent;border:none;color:var(--text);padding:11px 12px;font-size:.85rem;font-weight:500;cursor:pointer;border-radius:9px;text-align:left;width:100%;}
 .sq-menu-dropdown button:hover{background:rgba(255,255,255,.06);}
+.admin-link{display:flex;align-items:center;gap:10px;text-decoration:none;background:rgba(228,103,24,.12);border:1px solid rgba(255,179,71,.26);color:var(--accent2);padding:11px 12px;font-size:.85rem;font-weight:600;border-radius:9px;text-align:left;width:100%;}
+.admin-link:hover{background:rgba(228,103,24,.22);}
+
 
 .hero{position:relative;height:230px;margin:0 -16px 0;overflow:hidden;}
-.hero img{width:100%;height:100%;object-fit:cover;object-position:center 20%;filter:saturate(1.05);}
+.hero img{width:100%;height:100%;object-fit:cover;object-position:center center;opacity:.88;filter:saturate(1.12) contrast(1.04);}
 .hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,17,.15) 0%,rgba(6,9,17,.55) 55%,var(--bg) 100%);}
 .hero-text{position:absolute;left:20px;right:20px;bottom:16px;z-index:1;}
 .hero-text .name{font-family:var(--fh);font-size:1.7rem;font-weight:700;letter-spacing:.01em;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);}
@@ -136,8 +143,13 @@ input[type=text]:focus{border-color:var(--accent2);}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       My Paired Number
     </button>
+    <a class="admin-link" href="/admin" onclick="sqMenuClose()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/><path d="M9.5 12l1.7 1.7 3.4-3.4"/></svg>
+      Admin Console
+    </a>
   </div>
   <span class="topnav-title">Varnox X Crasher</span>
+  <a class="topnav-admin" href="/admin">Admin</a>
 </nav>
 
 <div class="wrap">
@@ -432,7 +444,8 @@ async function doPair() {
       document.getElementById('no-server-overlay').classList.add('show');
       return;
     }
-    const msg = r?.error === 'already_connected' ? 'This number is already connected.'
+    const msg = r?.error === 'premium_mode_enabled' ? 'Premium-only mode is enabled. Please contact the owner for access.'
+      : r?.error === 'already_connected' ? 'This number is already connected.'
       : r?.error === 'server_full' ? 'This number is already connected.'
       : 'Failed to generate a pairing code. Try again.';
     label.textContent = 'Error';

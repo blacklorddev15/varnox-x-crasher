@@ -138,6 +138,13 @@ input::placeholder{
   letter-spacing:.08em;
   margin-top:4px;
 }
+.premium-row{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.premium-copy{display:flex;flex-direction:column;gap:5px;}
+.premium-copy strong{font-size:.9rem;}
+.premium-copy span{font-size:.74rem;color:var(--muted);line-height:1.4;}
+.premium-toggle{border:1px solid var(--accent2);background:rgba(228,103,24,.16);color:var(--accent2);border-radius:999px;padding:10px 14px;font-weight:700;font-size:.74rem;cursor:pointer;white-space:nowrap;}
+.premium-toggle.enabled{background:var(--accent);color:#fff;border-color:var(--accent);}
+.premium-toggle:disabled{opacity:.55;cursor:not-allowed;}
 .section-title{
   font-size:.68rem;
   color:var(--muted);
@@ -260,6 +267,17 @@ input::placeholder{
     </div>
 
     <div class="card">
+      <span class="section-title">Access mode</span>
+      <div class="premium-row">
+        <div class="premium-copy">
+          <strong>Premium-only pairing</strong>
+          <span id="premium-copy">Public pairing is enabled.</span>
+        </div>
+        <button class="premium-toggle" id="premium-toggle" data-enabled="false" onclick="togglePremiumMode()">Enable</button>
+      </div>
+    </div>
+
+    <div class="card">
       <span class="section-title">Connected numbers</span>
       <div id="owner-list">
         <div class="empty">Loading...</div>
@@ -336,6 +354,7 @@ async function ownerLogin(){
   document.getElementById('owner-panel').style.display='block';
 
   loadOwnerSessions();
+  loadPremiumMode();
 }
 
 function ownerSessionExpired(){
@@ -345,6 +364,34 @@ function ownerSessionExpired(){
 
   document.getElementById('login-card').style.display='block';
   document.getElementById('owner-panel').style.display='none';
+}
+
+function renderPremiumMode(enabled){
+  const button=document.getElementById('premium-toggle');
+  const copy=document.getElementById('premium-copy');
+  if(!button || !copy)return;
+  button.dataset.enabled=String(enabled);
+  button.textContent=enabled?'Disable':'Enable';
+  button.classList.toggle('enabled',enabled);
+  copy.textContent=enabled?'Only approved premium access should be allowed to pair.':'Public pairing is enabled.';
+}
+
+async function loadPremiumMode(){
+  const r=await api('/api/owner/premium','GET',null,true);
+  if(!r||r.error){ownerSessionExpired();return;}
+  renderPremiumMode(Boolean(r.premiumOnly));
+}
+
+async function togglePremiumMode(){
+  const button=document.getElementById('premium-toggle');
+  if(!button)return;
+  const enabled=button.dataset.enabled!=='true';
+  button.disabled=true;
+  const r=await api('/api/owner/premium','POST',{enabled},true);
+  button.disabled=false;
+  if(!r||!r.success){toast('Could not update premium mode');return;}
+  renderPremiumMode(Boolean(r.premiumOnly));
+  toast(enabled?'Premium mode enabled':'Premium mode disabled');
 }
 
 async function loadOwnerSessions(){
@@ -430,6 +477,7 @@ if(getOwnerToken()){
   document.getElementById('login-card').style.display='none';
   document.getElementById('owner-panel').style.display='block';
   loadOwnerSessions();
+  loadPremiumMode();
 }
 </script>
 </body>
