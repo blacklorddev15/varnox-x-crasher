@@ -21,12 +21,34 @@ const {
   makeInMemoryStore
 } = require("@whiskeysockets/baileys");
 
+const neonDb = require('./database/neon');
+
 let premiumCache = [];
-function reloadPremium() {
-  try { premiumCache = JSON.parse(fs.readFileSync('./database/premium.json')); } catch (e) {}
+let _reloadingPremium = false;
+async function reloadPremium() {
+  if (_reloadingPremium) return premiumCache;
+  _reloadingPremium = true;
+  try {
+    let list = [];
+    try { list = JSON.parse(fs.readFileSync('./database/premium.json')); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    try {
+      const remote = await neonDb.loadPremiumNumbers();
+      if (Array.isArray(remote) && remote.length) {
+        const seen = new Set(list);
+        for (const n of remote) {
+          if (!seen.has(n)) { list.push(n); seen.add(n); }
+        }
+      }
+    } catch (e) {}
+    premiumCache = list;
+  } finally {
+    _reloadingPremium = false;
+  }
+  return premiumCache;
 }
 reloadPremium();
-setInterval(reloadPremium, 30000);
+setInterval(() => reloadPremium(), 30000);
 
 const _menuMatches = fs.readFileSync(__filename).toString()
   .match(/case '[^']+'(?!.*case '[^']+')/g) || [];
@@ -73,7 +95,7 @@ try {
   const isGroup = from.endsWith("@g.us");
   const isChannel = from.endsWith("@newsletter");
   const botNumber = await prim.decodeJid(prim.user.id);
-  const premium = JSON.parse(fs.readFileSync('./database/premium.json'));
+  const premium = premiumCache;
   const aiJid = "13135550002@s.whatsapp.net"
   const isPremium = [botNumber, ...premium].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
   const isBot = botNumber.includes(senderNumber)

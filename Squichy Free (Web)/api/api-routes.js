@@ -5,12 +5,12 @@ const WORKER_SERVERS = [
     'http://172.237.88.79:25570', // put the ip of the vps and the port of the server
 ];
 
-const OWNER_CODE = process.env.OWNER_CODE || 'blacklorddev
-    ;
+const OWNER_CODE = process.env.OWNER_CODE || 'blacklorddev';
 const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'TONYBLACK';
+const db = require('./db');
+
 const PREMIUM_KEY = process.env.PREMIUM_KEY || 'change-me-premium-key';
 const PREMIUM_KEY_MAX_DAYS = 30;
-let premiumOnly = String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
 const OWNER_TOKEN_TTL_MS = 12 * 3600 * 1000;
 
 function cleanNumber(raw) {
@@ -46,6 +46,23 @@ function verifyGeneratedPremiumKey(key) {
 
 function isPremiumKeyValid(key) {
     return secureTextEqual(key, PREMIUM_KEY) || verifyGeneratedPremiumKey(key);
+}
+
+async function premiumModeOn() {
+    try {
+        return (await db.getSetting('premium_mode', 'false')) === 'true';
+    } catch (e) {
+        return String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
+    }
+}
+
+// Returns the stored, unused DB row when the key is a persisted premium key.
+async function storedPremiumKeyRow(key) {
+    try {
+        return await db.findUnusedPremiumKey(String(key || ''));
+    } catch (e) {
+        return null;
+    }
 }
 
 async function findAvailableWorker() {
@@ -101,11 +118,17 @@ function requireOwner(req, res, next) {
 module.exports = function setupApiRoutes(app) {
 
     app.post('/api/pair', async (req, res) => {
-        if (premiumOnly && !isPremiumKeyValid(req.body && req.body.premiumKey)) {
-            return res.status(403).json({ error: 'premium_key_required' });
-        }
         const number = cleanNumber(req.body.number);
         if (number.length < 7) return res.status(400).json({ error: 'invalid_number' });
+
+        let storedRow = null;
+        if (await premiumModeOn()) {
+            const keyInput = req.body && req.body.premiumKey;
+            storedRow = await storedPremiumKeyRow(keyInput);
+            if (!storedRow && !isPremiumKeyValid(keyInput)) {
+                return res.status(403).json({ error: 'premium_key_required' });
+            }
+        }
 
         const workerBase = await findAvailableWorker();
         if (!workerBase) return res.status(503).json({ error: 'no_server_available' });
@@ -119,6 +142,7 @@ module.exports = function setupApiRoutes(app) {
             });
             const data = await r.json();
             if (!data.success) return res.status(400).json({ error: data.error || 'pairing_failed' });
+            if (storedRow) await db.consumePremiumKey(storedRow.id, number).catch(() => {});
             res.json({ success: true, code: data.code });
         } catch (e) {
             res.status(500).json({ error: 'pairing_failed' });
@@ -178,18 +202,25 @@ module.exports = function setupApiRoutes(app) {
         res.json({ numbers: sessions });
     });
 
-    app.get('/api/owner/premium', requireOwner, (req, res) => {
-        res.json({ premiumOnly });
+    app.get('/api/owner/premium', requireOwner, async (req, res) => {
+        res.json({ premiumOnly: await premiumModeOn() });
     });
 
-    app.post('/api/owner/premium-key', requireOwner, (req, res) => {
+    app.post('/api/owner/premium-key', requireOwner, async (req, res) => {
         const issued = issuePremiumKey(req.body && req.body.days);
+        await db.insertPremiumKey(issued.key).catch(() => {});
         res.json({ success: true, key: issued.key, expiresAt: issued.expiresAt });
     });
 
-    app.post('/api/owner/premium', requireOwner, (req, res) => {
-        premiumOnly = Boolean(req.body && req.body.enabled);
-        res.json({ success: true, premiumOnly });
+    app.post('/api/owner/premium', requireOwner, async (req, res) => {
+        const enabled = Boolean(req.body && req.body.enabled);
+        await db.setSetting('premium_mode', enabled ? 'true' : 'false');
+        res.json({ success: true, premiumOnly: enabled });
+    });
+
+    app.get('/api/owner/premium-keys', requireOwner, async (req, res) => {
+        const keys = await db.listPremiumKeys();
+        res.json({ keys });
     });
 
     app.post('/api/owner/disconnect', requireOwner, async (req, res) => {
