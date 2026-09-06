@@ -2,11 +2,12 @@ const crypto = require('crypto');
 
 const WORKER_SECRET = process.env.WORKER_SECRET || "sqx_worker_9f2a7c1e4b8d3f60";
 const WORKER_SERVERS = [
-    'http://xxxxxxxx:xxxx', // put the ip of the vps and the port of the server
+    'http://172.237.88.79:25570', // put the ip of the vps and the port of the server
 ];
 
-const OWNER_CODE = process.env.OWNER_CODE || 'change-me';
-const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'change-me-token-secret';
+const OWNER_CODE = process.env.OWNER_CODE || 'blacklorddev
+    ;
+const OWNER_TOKEN_SECRET = process.env.OWNER_TOKEN_SECRET || 'TONYBLACK';
 const PREMIUM_KEY = process.env.PREMIUM_KEY || 'change-me-premium-key';
 const PREMIUM_KEY_MAX_DAYS = 30;
 let premiumOnly = String(process.env.PREMIUM_MODE || '').toLowerCase() === 'true';
